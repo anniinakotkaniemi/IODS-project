@@ -1,4 +1,3 @@
-
 # About the project
 
 *Write a short description about the course and add a link to your GitHub repository here. This is an R Markdown (.Rmd) file so you should use R Markdown syntax.*
@@ -6,10 +5,27 @@
 ```{r}
 # This is a so-called "R chunk" where you can write R code.
 
-#Testing testing 
+hello <- "Hello reviewer!"
 
 date()
+print(hello)
 
 ```
-The text continues here.
-Here?
+
+*Do I just write text here then? I'm still so confused with the R Markdown files.*
+
+## My first impressions of working with the tools of this course
+
+I am feeling a bit lost to be honest. I have been working with RStudio for a couple of years now, mostly with the good old learning by doing (and Googling) method. Still, this is all very new to me.
+
+All the new additions (Git, RMarkdown, working with this IODS project on RStudio and the magic how this file then is going to find its way in the course diary) make me feel like someone would have come to my house and completely arbitrary changed the place of ALL my stuff. Like, I know that it is my stuff and I am familiar with it, but I can not find anything and how everything is arranged lacks all logic (to me).
+
+But, I am expecting to learn more about all these confusing new things, and I am very excited about it! (Although right now I'm struggling with a few deadlines, but I'll have more time to focus on learning in a week or so.) I hope to get a good crash-course on Git and learn how to use GitHub more fluently when working with code.
+
+I heard from the course from our very own Kimmo, I'm happy to have worked with him earlier and glad that he suggested I take social sciences statistics (and data science) courses when starting off with my PhD studies. **Thanks Kimmo!**
+
+Reflecting about my experiences with the R for Health Data Science book and the Exercise Set 1:
+
+As someone who has already used RStudio and the basic tools such as ggplot, it was a good recap and a demonstration on all the nice visualizations that are available. I have actually not worked with the %\>%-command from tidyverse before, even though I've seen it used. I have found it a bit "scary" as it deviates from what I'm used to, so it was very good to see so many examples using it. I will definitely start using it more in the future, as it is much more elegant for many functions that I've done with basic R before (such as the subset() function for subsetting instead of just filtering as you do with the %\>%). As I did not have that much time for conducting the exercises, I found it a bit hard when you had to make your own ggplots. But I'm happy to come back to the exercises next time I'm doing visualizations, as they give good hands-on examples for doing plots and graphs!
+
+Link to my GitHub repository: <https://github.com/anniinakotkaniemi/IODS-project>
