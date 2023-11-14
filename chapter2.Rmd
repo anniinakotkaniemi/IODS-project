@@ -6,8 +6,102 @@
 - Assume the reader has an introductory course level understanding of writing and reading R code as well as statistical methods.
 - Assume the reader has no previous knowledge of your data or the more advanced methods you are using.
 
+# 1.
 ```{r}
 date()
+learning2014 <- read.table("https://raw.githubusercontent.com/KimmoVehkalahti/Helsinki-Open-Data-Science/master/datasets/learning2014.txt", sep=",", header=T)
+
+# Explore the structure and dimensions of the data
+str(learning2014)
+dim(learning2014)
+```
+The examination shows that it is a datadrame object with 166 observations that take 7 variables: gender, age, attitude, deep, stra, surf and points
+
+# 2.
+```{r}
+
+# Graphical overview of data
+table_gender <- table(learning2014$gender)
+barplot(table_gender, main="Distribution of Gender")
+
+hist(learning2014$age, main="Distribution of Age", xlab="Age")
+hist(learning2014$attitude, main="Distribution of Attitude", xlab="Attitude")
+hist(learning2014$deep, main="Distribution of Deep", xlab="Deep")
+hist(learning2014$stra, main="Distribution of Stra", xlab="Stra")
+hist(learning2014$surf, main="Distribution of Surf", xlab="Surf")
+hist(learning2014$points, main="Distribution of Points", xlab="Points")
+
+# Summaries of the data
+table(learning2014$gender)
+summary(learning2014$attitude)
+summary(learning2014$age)
+summary(learning2014$deep)
+summary(learning2014$stra)
+summary(learning2014$surf)
+summary(learning2014$points)
+
+
 ```
 
-Here we go again...
+The graphical overview and the summaries show firstly that there is almost twice as many female (110) than there are men (56) in the data. The age distribution shows that there are most respondents that are 20 to 25 years old, but that the median is 22 and the mean is 25 and half years. The age span of the respondents is from 17 to 55 years. The rest of the variables show, as could be expected, a distribution close to a normal distribution. This is the case especially for the Distribution of Points, whereas distributions for Deep and Surf are both sligthly tilted. Comparing median and mean values for the variables shows however that the values are rather equally divided in the data, as the two values are rather close to each other.
+
+# 3. 
+
+```{r}
+# Fitting the regression model with Exam points as the dependent variable and gender, attitude and age as independent variables
+
+model.1 <- lm(points ~ gender + attitude + age, data = learning2014)
+
+# Summarize the model
+summary(model.1)
+
+
+```
+The regression model shows that in the multivariate regression model with gender, attitude and age as explanatory variables, only attitude gives a positive and statistically significant effect to higher exam results. With one units increase in attitude, the exam results are expected to rise by 3.6. Thus, when the gender and age or respondents are hold constant, having a good attitude towards the course is associated with also faring better with the course. 
+
+As the model contains two variables, gender and age, that show no statistically significant relationship with the outcome variable, I test to fit the model without them.
+
+```{r}
+# Model 2 without age
+model.2 <- lm(points ~ gender + attitude, data = learning2014)
+# Summarize the model
+summary(model.2)
+# Model 3 without attitude
+model.3 <- lm(points ~ attitude + age, data = learning2014)
+# Summarize the model
+summary(model.3)
+# Model 4 without both gender and age
+model.4 <- lm(points ~ attitude, data = learning2014)
+# Summarize the model
+summary(model.4)
+
+
+```
+Omitting age and gender does not give much new information as opposed to the full multivariate model.
+
+# 4.
+
+Based on the fitted model, a positive attitude is positively correlated with exam results. Age and gender, on the contrary, show no statistically significant effect. As gender is binary variable, the coefficient "genderM" shows the effect of being a male, or "going from female to male". The coefficients of age and gender are although negative, leaving room for speculation whether there could be found a negative relationship between these variables and the outcome variable. That could mean that being older leads to lower exam results, and that women fare better than men in the exam. This is however mostly speculative, as these relationships could not be statistically confirmed even on 0.1 alpha value level.
+
+Even though attitude shows a strong effect on the target variable, both the multiple and adjusted R-squared values shows that this model only succeeds to explain roughly 20 per cent of the variation in the outcome variable; thus, the model is likely omit many variables that are highly linked with exam performance. Such variables could be for example interest in the course topic and previous performance in exams.
+
+# 5.
+
+```{r}
+
+#  Residuals vs Fitted values plot
+plot(model.1, which = 1, main = "Residuals vs Fitted")
+
+# Normal QQ-plot
+plot(model.1, which = 2, main = "Normal QQ-Plot")
+
+# Residuals vs Leverage plot
+plot(model.1, which = 5, main = "Residuals vs Leverage")
+
+```
+
+Firstly, the residuals vs fitted values plot shows that the residuals are rather randomly scattered around the horizontal axis. This is good news to the explanatory power of our model as it indicates that no serious concerns of heteroscedasticity or non-linearity are apparent in the data.
+
+In the Normal QQ plot, points should approximately follow a straight line. Departures from linearity may suggest deviations from normality in the residuals. This expectation is mostly fulfilled: the plots follow the straight line for the most of it, deviating only in the beginning and in the end.
+
+The residuals vs leverage plot helps identifying influential observations with high leverage.  Points outside the Cook's distance lines may have a disproportionate influence on the regression coefficients. It would seem to indicate that there are no observations that would have substantial impact on the regression coefficients.
