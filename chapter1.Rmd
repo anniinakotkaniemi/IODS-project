@@ -1,6 +1,6 @@
-# About the project
+# Chapter 1
 
-*Write a short description about the course and add a link to your GitHub repository here. This is an R Markdown (.Rmd) file so you should use R Markdown syntax.*
+*Course diary for the Introduction to Open Data Science Course. Link to the project GitHub Repository: https://github.com/anniinakotkaniemi/IODS-project*
 
 ```{r}
 # This is a so-called "R chunk" where you can write R code.
@@ -28,5 +28,4 @@ Reflecting about my experiences with the R for Health Data Science book and the 
 
 As someone who has already used RStudio and the basic tools such as ggplot, it was a good recap and a demonstration on all the nice visualizations that are available. I have actually not worked with the %\>%-command from tidyverse before, even though I've seen it used. I have found it a bit "scary" as it deviates from what I'm used to, so it was very good to see so many examples using it. I will definitely start using it more in the future, as it is much more elegant for many functions that I've done with basic R before (such as the subset() function for subsetting instead of just filtering as you do with the %\>%). As I did not have that much time for conducting the exercises, I found it a bit hard when you had to make your own ggplots. But I'm happy to come back to the exercises next time I'm doing visualizations, as they give good hands-on examples for doing plots and graphs!
 
-Link to my GitHub repository: <https://github.com/anniinakotkaniemi/IODS-project>
 
