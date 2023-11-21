@@ -1,7 +1,91 @@
 
 # Chapter 3 Logistic Regression
-
 ```{r}
 date()
+# 2
+# Read the alc dataframe
+# First making sure that my dataframe is equal to Kimmo's
+alc <- read.table("https://raw.githubusercontent.com/KimmoVehkalahti/Helsinki-Open-Data-Science/master/datasets/alc.csv", sep=",", header=T)
+alc_mine <- read.csv("~/IODS-project/data/alc.csv")
+# Compare data frames using all.equal
+all.equal(alc, alc_mine)
+# All good!
+
+# Print the names of variables
+names(alc)
+
+```
+ The dataframe includes information about student achievement in education of two Portugese schools. Attributes include grades, demographic, social and school related features.
+
+3. Studying the relationships between high/low alcohol consumption and some other variables. I study 4 focus variables: sex, age, absences and higher
+
+My hypotheses for the study:
+
+H1: Gender is likely to affect alcohol consumption; being a man is positively related with higher alcohol consumption
+H2: Older students drink more; Age is positively related with higher alcohol consumption
+H3: Having many absences is positively related to higher alcohol consumption
+H4: Wanting to take higher education is negatively related to higher alcohol consumption
+
+*Next, moving on to exploring the data!*
+
+```{r}
+
+# Exploring the distributions of variables
+# Age and absences
+summary(alc[c('age', 'absences')])
+# Sex
+table(alc$sex)
+# Higher
+table(alc$higher)
+
+# Barplots
+barplot(table(alc$age), main = "Distribution of Age", xlab='Age', ylab='Frequency')
+barplot(table(alc$absences), main = "Distribution of Absences", xlab='Absences', ylab='Frequency', ylim=c(0,70))
+barplot(table(alc$sex), main = "Distribution of Sex", xlab='Sex', ylab='Frequency', ylim=c(0,200))
+barplot(table(alc$higher), main = "Distribution of Higher", xlab='Higher', ylab='Frequency')
+
+```
+The data shows that the students are between 15 and 22 years old, and majority of them have no or only a few absences. However, there are a few outliers with over 10 or as many as 45 absences. There are approximately as many female (195) as men (175), however, only a small group does not want to continue to higher education (16 said no) whereas as many as 354 said yes in the survey. 
+
+Regarding my hypothesis, this exploration tells me that the variable 'higher' is not likely to show an effect due to so few in the 'no' category, but as for the other variables, they might show effects in the modeling. Especially absences I would expect to give an effect, as there are quite many still with over 10 absences.
+
+*Next up, modeling the data with logistic regression!*
+
+```{r}
+# 5
+# Convert 'sex' and 'higher' to factors
+alc$sex <- as.factor(alc$sex)
+alc$higher <- as.factor(alc$higher)
+
+# Fit logistic regression model
+log_model <- glm(alc_use ~ age + sex + absences + higher, data = alc)
+# The summary of the model
+summary(log_model)
+
+# Looking at odds ratios
+exp(coef(log_model))
+# Provide confidence intervals for the odds ratios
+exp(confint(log_model))
+
+```
+
+The model should be interpreted so that the coefficients represent the log-odds of the probability of the dependent variable being TRUE (or a 1 instead of 0). For each independent variable, the coefficient indicates how the log-odds change with a one-unit increase in that variable, when holding the other variables constant.
+
+The interpretation is also made more intuitive using odds ratios. Odds ratios are obtained by exponentiating the coefficients. Then the odds ratio represents the change in the odds of the event (being TRUE) for a one-unit change in the predictor variable. And odds ratio bigger than 1 indicates an increase in the odds, and lower than 1 indicates a decrease in the odds. The confidence intervals not including 1 are generally considered statistically significant results.
+
+The odds ratios (and the logistic regression output) of the results show that the three variables, age, sex and absences give positive and statistically significant effects to higher alcohol consumption. These three have odds ratios over 1, and the confidence intervals do not include 1.  Age is positively related to the target variable, meaning that older students drink more (as could be expected). Sex is associated with alcohol use in the way that I hypothesised, i.e., so that men drink more than women. Absences gave also an effect.
+
+As posited, the higher variable did not give an effect. The confidence interval comprises 1, and also in the regression output it can be read that the term is statistically non-significant. Thus, the ambition to continue to higher education did not show a relationship to alcohol consumption with this data. However, this could also be due to the vast majority of the respondents wanting to continue their education; different results could be obtained with data where there was more distribution in this variable. 
+
+*Almost there, continuing to exploring the predictive power of my model!*
+
+
+```{r}
+# Make predictions
+predictions <- predict(log_model, type = "response") > 0.5
+# Create a 2x2 cross-tabulation
+confusion_matrix <- table(Actual = alc$alc_use, Predicted = predictions)
+print(confusion_matrix)
+# Did not have time to solve this last one before the deadline (why does everything always have to be done in the last minute :) )
 
 ```
