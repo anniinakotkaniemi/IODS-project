@@ -45,3 +45,24 @@ for(col_name in free_cols) {
   }
 }
 alc
+
+# Create the new variable 'alc_use' with the mean of 'Dalc' and 'Walc' variables
+# Load the dplyr package
+library(dplyr)
+# Calculate the mean of 'Dalc' and 'Walc'
+mean_Dalc <- mean(alc$Dalc)
+mean_Walc <- mean(alc$Walc)
+# Create a new column 'alc_use' with the mean value
+alc <- alc %>%
+  mutate(alc_use = (Dalc + Walc) / 2)
+# Create a new logical column 'high_use'
+alc <- alc %>%
+  mutate(high_use = alc_use > 2)
+
+# Glimpse at the new data
+glimpse(alc)
+# Looks good!
+
+# Save the new data
+write_csv(alc, file="~/IODS-project/data/alc.csv")
+?write_csv
