@@ -46,10 +46,8 @@ Let's move on to examining the correlations between the variables:
 ```{r}
 # create the correlation matrix, round it to two digits
 cor_matrix <- round(cor(boston),2)
-cor_matrix
 # This does not tell us much yet - let's visualize it
 library(corrplot)
-dev.off()
 corrplot(cor_matrix, method="shade", title = "Correlation plot Boston variables", mar=c(1,1,1,1))
 ```
 
@@ -79,7 +77,6 @@ library(dplyr)
 boston_scaled <- select(boston_scaled, -crim)
 # add the new categorical crime variable
 boston_scaled_new <- data.frame(boston_scaled, crime)
-boston_scaled_new
 # Test and train data sets:
 boston_n <- nrow(boston_scaled)
 # take a random sample of 80% of the rows
