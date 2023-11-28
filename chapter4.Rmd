@@ -1,0 +1,207 @@
+# Chapter 4 Clustering and classification
+
+```{r}
+# load the Boston data
+library(MASS)
+data("Boston")
+dim(Boston)
+str(Boston)
+```
+
+Boston data is a data set with Housing Values in the suburbs of Boston. It includes 506 observations that take 14 variables. Information on the variables can be found at: <https://stat.ethz.ch/R-manual/R-devel/lib>
+
+```{r}
+# Simplifying the name of the dataframe
+boston <- Boston
+
+# Graphical overview of the data 
+par(mfrow = c(2,2))
+hist(boston$crim, main = "crim")
+hist(boston$zn,  main = "zn")
+hist(boston$indus, main = "indus")
+barplot(table(boston$chas), main = 'chas')
+hist(boston$nox, main = "nox")
+hist(boston$rm, main = "rm")
+hist(boston$age, main = "age")
+hist(boston$dis, main = "dist")
+barplot(table(boston$rad), main = 'rad')
+hist(boston$tax, main = "tax")
+hist(boston$ptratio, main = "ptratio")
+hist(boston$black, main = "black_")
+hist(boston$lstat, main = "lstat")
+hist(boston$medv, main = "medv")
+
+# Summaries of the data
+summary(boston)
+# Looking at the distribution of the binary variable chas
+table(boston$chas)
+```
+
+The graphical overview and the summary of the data show that some variables are rather equally divided, while others are more skewed. The `crim` variable shows that the per capita crime rate by town is in majority of cases rather low, likewise `zn` tells us that the proportion of residential land zoned for lots over 25k square feet is the lowest category in the absolute majority of observations. Another variable with little variation is `chas` as 741 suburbs do not bound the Charles River, while only 35 do.
+
+`nox` shows that the nitrogen oxides concentration in most suburbs is below 0.5, and `rm` tells us that the dwellings are rather big as the average amount of rooms hoovers around 6 to 7. From `dist` we can see that the vast majority of suburbs are rather close to Boston employment centers. One might consider this a quite unsurprising as the convenient commute is often one of the main reasons to live in suburbs.
+
+Let's move on to examining the correlations between the variables:
+
+```{r}
+# create the correlation matrix, round it to two digits
+cor_matrix <- round(cor(boston),2)
+cor_matrix
+# This does not tell us much yet - let's visualize it
+library(corrplot)
+dev.off()
+corrplot(cor_matrix, method="shade", title = "Correlation plot Boston variables", mar=c(1,1,1,1))
+```
+
+The correlation matrix shows that there is high positive correlation between for example `rad` and `tax`, meaning that accessibility to radial highways and full-value property tax are related. As higher property tax indicates higher price, this finding means that the homes closer to highways are more expensive. `tax` gives somewhat weaker positive correlations also with `indus` and `nox`, showing that higher proportion of non-retail business and higher nitrogen oxides concentration go together with higher taxes. Strong negative correlations can be found between median value of owner occupied homes `medv` and lower status of the population `lstat`, showing that unsurprisingly, lower economic status goes together with lower home property value. Distance seems to play a key role in explaining correlations in the data as it shows strong negative correlations with `age`, `indus`, and `nox`, meaning that older owner-occupied houses, areas with higher proportion of non-retail businesses, and areas with higher nitrogen oxides concentration are further away from the Boston city center and services.
+
+Off to standardizing the dataset!
+
+```{r}
+# Scale the Boston data set
+boston_scaled <- scale(boston) 
+summary(boston_scaled)
+
+```
+
+From the summary it can be seen that scaling centers the variables so that they have mean of 0 and variance of 1.
+
+Next up: Creating a categorical variable of the crime rate
+
+```{r}
+# Turn to dataframe
+boston_scaled <- as.data.frame(boston_scaled)
+#  create a categorical variable of the crime rate 
+bins <- quantile(boston_scaled$crim)
+crime <- cut(boston_scaled$crim, breaks = bins,labels = c("low","medium_low","medium_high","high"), include.lowest = TRUE)
+# remove the original crim variable
+library(dplyr)
+boston_scaled <- select(boston_scaled, -crim)
+# add the new categorical crime variable
+boston_scaled_new <- data.frame(boston_scaled, crime)
+boston_scaled_new
+# Test and train data sets:
+boston_n <- nrow(boston_scaled)
+# take a random sample of 80% of the rows
+ind <- sample(boston_n,  size = boston_n * 0.8)
+# create train set
+train <- boston_scaled_new[ind,]
+# create test set 
+test <- boston_scaled_new[-ind,]
+```
+
+Next up, fitting the linear discriminant analysis on the train set. LDA is used to find linear combinations of variables that separate the target variable classes. This is done to distinguish, which variables predict certain crime rate in the data.
+
+```{r}
+# Fit the LDA
+lda_fit <- lda(crime ~ ., data = train)
+lda_fit
+
+# Plot the LDA
+lda.arrows <- function(x, myscale = 1, arrow_heads = 0.1, color = "red", tex = 0.75, choices = c(1,2)){
+  heads <- coef(x)
+  graphics::arrows(x0 = 0, y0 = 0, 
+         x1 = myscale * heads[,choices[1]], 
+         y1 = myscale * heads[,choices[2]], col=color, length = arrow_heads)
+  text(myscale * heads[,choices], labels = row.names(heads), 
+       cex = tex, col=color, pos=3)
+}
+classes <- as.numeric(train$crime)
+
+plot(lda_fit, dimen = 2)
+lda.arrows(lda_fit, myscale = 1)
+```
+
+From the plot it can be seen that the variable `rad` has a high impact on the crime rate, meaning that how closely located a suburb is to circular highways seems to be a variable with the most explanatory power on crime rates in the data. 
+
+Let's assess how well the model performed with cross-tabulation:
+
+```{r}
+lda_pred <- predict(lda_fit, newdata = test)
+lda_pred
+# Extracting the crime variable from the test data
+correct_classes <- test$crime
+table(correct=correct_classes, predicted = lda_pred$class)
+```
+
+The model seems to predict the crime rates quite well for medium high and high crime rates. The lower categories, low and medium low, are not as accurate. Thus, even though the model seems to perform quite well in predicting high crime rate, the results of the model should be interpreted with caution.
+
+Almost done! We still have the k-means clustering analysis left. To start off, first some data prepping and calculating the euclidean and manhattan distances.
+
+```{r}
+# Re-loading the data
+data("Boston")
+# Scaling the data to get comparabable results
+boston_scaled <- scale(Boston)
+boston_scaled <- as.data.frame(boston_scaled)
+# Calculating then euclidean distances between the observations
+dist_eu <- dist(boston_scaled, method= "euclidean")
+summary(dist_eu)
+# Calculating the Manhattan distances
+dist_man <- dist(boston_scaled, method = "manhattan")
+summary(dist_man)
+
+```
+
+Next, let's calculate the k-means of the Boston dataset:
+
+```{r}
+# Setting today's date as the seed
+set.seed(28112023)
+# Determining the number of clusters
+k_max <- 10
+# Calculating the total within sum of squares
+twcss <- sapply(1:k_max, function(k){kmeans(boston_scaled, k)$tot.withinss})
+# Plotting the results
+library(ggplot2)
+qplot(x = 1:k_max, y = twcss, geom = 'line')
+
+```
+
+
+From the plot it can be seen that the total of within cluster sum of squares (WCSS) drops at 2. Ten clusters does not seem to give good results; two is likely to be the optimal number of clusters for the data. 
+
+```{r}
+
+# Calculating the k-means clustering
+km <- kmeans(boston_scaled, centers = 2)
+# Plot the clusters in Boston dataset
+pairs(boston_scaled, col = km$cluster)
+
+# Let's look at a few variables to get readable plots:
+km <- kmeans(boston_scaled[c("age", "crim", "lstat", "rm", "nox")], centers = 2)
+pairs(boston_scaled[c("age", "crim", "lstat", "rm", "nox")], col = km$cluster)
+
+```
+
+
+From the plots it can be seen that the data is rather clustered to two clusters, indicated by the red and black colours. 
+
+Let's start with the Bonus assignments as well, I'll see how much I can manage (clock is ticking and deadline is approaching - in the last minute again :) )
+
+```{r}
+# Scaling the data
+boston_scaled <- scale(Boston)
+boston_scaled <- as.data.frame(boston_scaled)
+# Calculating k-means
+kmeans <- kmeans(boston_scaled, centers = 5)
+boston_scaled$cluster <- factor(kmeans$cluster)
+# LDA analysis
+lda_fit <- lda(cluster ~ ., data = boston_scaled)
+# Running the function for lda biplot arrows
+lda.arrows <- function(x, myscale = 1, arrow_heads = 0.1, color = "red", tex = 0.75, choices = c(1,2)){
+  heads <- coef(x)
+  graphics::arrows(x0 = 0, y0 = 0, 
+         x1 = myscale * heads[,choices[1]], 
+         y1 = myscale * heads[,choices[2]], col=color, length = arrow_heads)
+  text(myscale * heads[,choices], labels = row.names(heads), 
+       cex = tex, col=color, pos=3)
+}
+
+# plot the lda (bi)plot
+plot(lda_fit, dimen =2)
+lda.arrows(lda_fit, myscale = 1)
+# Checking the coefficients
+lda_fit$scaling
+
+```
