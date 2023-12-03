@@ -31,3 +31,23 @@ human <- inner_join(hd, gii, by = "country")
 
 # Saving as a csv file
 write.csv(human, "human.csv")
+
+
+# Continuing with the data wrangling for Assignment 5
+# Read the file
+human <- read_csv("~/human.csv")
+
+# Explore the dimensions and the structure of the data
+dim(human)
+str(human) 
+# The dataset includes 195 observations and 19 variables. The data includes information such as average life expectancy from 195 countries. 
+# More information about the data can be found at https://hdr.undp.org/data-center/human-development-index#/indicies/HDI
+
+# Exclude unneeded variables: keep only the columns matching the following variable names (described in the meta file above): "Country", "Edu2.FM", "Labo.FM", "Edu.Exp", "Life.Exp", "GNI", "Mat.Mor", "Ado.Birth", "Parli.F
+
+# Remove all rows with missing values 
+
+# Remove the observations which relate to regions instead of countries. (1 point)
+
+# The data should now have 155 observations and 9 variables (including the "Country" variable). 
+# Save the human data in your data folder. You can overwrite your old ‘human’ data. 

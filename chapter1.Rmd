@@ -14,7 +14,7 @@ print(hello)
 
 *Do I just write text here then? I'm still so confused with the R Markdown files.*
 
-## My first impressions of working with the tools of this course
+My first impressions of working with the tools of this course
 
 I am feeling a bit lost to be honest. I have been working with RStudio for a couple of years now, mostly with the good old learning by doing (and Googling) method. Still, this is all very new to me.
 
