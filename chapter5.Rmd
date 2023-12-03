@@ -1,0 +1,7 @@
+# Chapter 5 Dimensionality reduction techniques
+
+```{r}
+plot(pressure)
+```
+
+
