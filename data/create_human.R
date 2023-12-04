@@ -13,19 +13,19 @@ summary(hd)
 summary(gii)
 
 # Changing the column names according to the shorter names in the metadata
-colnames(hd) <- c("HDI_rank", "country", "HDI", "exp_life", "exp_educ", "mean_educ",
+colnames(hd) <- c("HDI_rank", "Country", "HDI", "Life.Exp", "Edu.Exp", "mean_educ",
                   "GNI", "GNI_HDI")
-colnames(gii) <- c("GII_rank", "country", "GII", "mort_ratio", "ABR", "PRP",
-                   "edu2f", "edu2m", "lab_f", "lab_m")
+colnames(gii) <- c("GII_rank", "Country", "GII", "Mat.Mor", "Ado.Birth", "Parli.F",
+                   "Edu2.F", "Edu2.M", "Labo.F", "Labo.M")
 
 # Creating two new variables in to the 'gii' data
-gii <- mutate(gii, edu2fm = edu2f / edu2m)
-gii <- mutate(gii, lab_fm = lab_f / lab_m)
+gii <- mutate(gii, Edu2.FM = Edu2.F / Edu2.M)
+gii <- mutate(gii, Labo.FM = Labo.F / Labo.M)
 gii
 # Looks like it worked!
 
 # Joining the data sets with 'country' and keeping only the countries which are shared between both data sets
-human <- inner_join(hd, gii, by = "country")
+human <- inner_join(hd, gii, by = "Country")
 
 # The data takes 19 variables and 195 observations, as it should!
 
@@ -43,11 +43,17 @@ str(human)
 # The dataset includes 195 observations and 19 variables. The data includes information such as average life expectancy from 195 countries. 
 # More information about the data can be found at https://hdr.undp.org/data-center/human-development-index#/indicies/HDI
 
-# Exclude unneeded variables: keep only the columns matching the following variable names (described in the meta file above): "Country", "Edu2.FM", "Labo.FM", "Edu.Exp", "Life.Exp", "GNI", "Mat.Mor", "Ado.Birth", "Parli.F
+# Exclude unneeded variables: keep only the columns matching the following variable names (described in the meta file above): "Country", "Edu2.FM", "Labo.FM", "Edu.Exp", "Life.Exp", "GNI", "Mat.Mor", "Ado.Birth", "Parli.F"
+human <- human[, c("Country", "Edu2.FM", "Labo.FM", "Edu.Exp", "Life.Exp", "GNI", "Mat.Mor", "Ado.Birth", "Parli.F")]
 
 # Remove all rows with missing values 
+human <- na.omit(human)
 
-# Remove the observations which relate to regions instead of countries. (1 point)
+# Remove the observations which relate to regions instead of countries
+human <- head(human, n = nrow(human) - 7)
 
-# The data should now have 155 observations and 9 variables (including the "Country" variable). 
-# Save the human data in your data folder. You can overwrite your old ‘human’ data. 
+# The data has 155 observations and 9 variables as it should - wohoo!
+# Save the human data in the data folder
+write.csv(human, "~/IODS-project/data/human.csv")
+
+# Data Wrangling done!
