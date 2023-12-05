@@ -1,7 +1,162 @@
 # Chapter 5 Dimensionality reduction techniques
 
+
 ```{r}
-plot(pressure)
+date()
+```
+
+*Move the country names to rownames (see Exercise 5.5). Show a graphical overview of the data and show summaries of the variables in the data. Describe and interpret the outputs, commenting on the distributions of the variables and the relationships between them. (0-3 points)*
+
+```{r}
+# First, let's get an overview of the data
+names(human)
+summary(human)
+hist(human$Edu2.FM)
+hist(human$Labo.FM)
+hist(human$Edu.Exp)
+hist(human$Life.Exp)
+hist(human$GNI)
+hist(human$Mat.Mor)
+hist(human$Ado.Birth)
+hist(human$Parli.F)
+# Moving the country names to rownames
+library(tibble)
+human_ <- column_to_rownames(human, "Country")
+human_
+# Visualize all the human_ variables
+library(GGally)
+ggpairs(human_ , progress=F)
+# create the correlation matrix, round it to two digits
+cor_matrix <- round(cor(human_),2)
+# Let's visualize it
+library(corrplot)
+corrplot(cor_matrix, method="shade", title = "Correlation plot Human data", mar=c(1,1,1,1))
+```
+
+Many interesting observations can be made from the data. A few variables to note is that the percentage of female representatives in the parliament, `Parli.F` , is most commonly 10 to 20 percent, and only below 5 countries make it to an equal representation. From adolescent birth rate `Ado.Birth` and maternal mortality ratio `Mat.Mor` it can be seen that in the vast majority of countries, very few adolescents give to birth and mothers die in labor - this is an excellent development although there still are problems in some countries.
+
+From the correlation matrix it can be seen that two variable pairs show a quite strong positive correlation: `Life.Exp` and `Edu.Exp` and `Ado.Birth` and `Mat.Mor`. In countries with longer life expectancy, people also educate themselves further, and in countries where adolescents give to birth, more mothers also die in labor. These correlations show that in well-faring countries people live longer and educate themselves more, whereas in some poorer developing countries with worse situation in gender equality women get pregnant rather young and lack access to medical treatment when giving birth.
+
+One pair of variables also show a strong negative correlation: `Mat.Mor` and `Life.Exp`. Thus, as could be said already in previous paragraph, in countries with longer life expectancy there is also lower maternal mortality, and in countries with high maternal mortality, life expectancy is higher.
+
+
+*Perform principal component analysis (PCA) on the raw (non-standardized) human data. Show the variability captured by the principal components. Draw a biplot displaying the observations by the first two principal components (PC1 coordinate in x-axis, PC2 coordinate in y-axis), along with arrows representing the original variables. (0-2 points)*
+
+```{r}
+# perform principal component analysis with un-standardized data
+pca_human <- prcomp(human_)
+
+# draw a biplot of the principal component representation and the original variables
+biplot(pca_human, choices = 1:2)
+
+# summary of the pca
+summary(pca_human)
+
+```
+
+Hmm, based on this analysis, the Gross National Income is the only variable explaining variation in the data. Also the summary shows large standard deviations, which is a sign of the model not explaining the data very well. This is sure due to the data not being standardised, so let's try that next.
+
+
+*Standardize the variables in the human data and repeat the above analysis. Interpret the results of both analysis (with and without standardizing). Are the results different? Why or why not? Include captions (brief descriptions) in your plots where you describe the results by using not just your variable names, but the actual phenomena they relate to. (0-4 points)*
+
+```{r}
+# standardize the variables
+human_std <- scale(human_)
+# perform principal component analysis (with the SVD method)
+pca_human <- prcomp(human_std)
+
+# draw a biplot of the principal component representation and the original variables
+biplot(pca_human, choices = 1:2)
+
+# a summary of pca_human
+s <- summary(pca_human)
+s
+
+# rounded percentanges of variance captured by each PC
+pca_pr <- round(1*s$importance[2, ], digits = 5)
+pca_pr
+
+# create object pc_lab to be used as axis labels
+pc_lab <- paste0(names(pca_pr), " (", pca_pr, "%)")
+
+# draw a biplot
+biplot(pca_human, cex = c(0.8, 1), col = c("grey40", "deeppink2"), xlab = pc_lab[1], ylab = pc_lab[2])
+
+
+```
+
+The second, standardized PCA shows that there are many other variables that account for variation in the data. In conducting PCA, all variables need to take same scale - as GNI takes much larger values than the percentages and indeces that the other values take, by mere magnitude it seems to be the only variable that matters. Non-standardized data can lead to biased outcomes as the variables that take biggest values and thus have larger scale have a dispoportionate influence on the principal components.
+
+The PCA lot gFrom the PCA plot it can be seen that maternal mortality ratio `Mat.Mort` and adolescent birth ratio `Ado.Birth` are components that line up in a group - this is something that could already be distinguished in the descriptive analysis above. Also the ratio of female population with secondary education to males with a secondary education `Edu2.FM` and `Life.Exp` are grouped. These two groups seem to constitute the PC1, the x-axis explaining 53,6% of the variation in the data.  These factors would seem to measure gender equality in society that reflects in higher percentage of women contra men being educated, women getting pregnant in adult age and better healthcare for women. As countries with gender equality are those with high standards of living, also life expectancy is correlated with these values. 
+
+In the second Pc2 axis, the variables explaining the second most variation (16,2%) are the percentage of female parliament representatives and the women-to-men ratio in labor force participation. This would seem to note that a higher proportion of women in the labor force are parliaments is related to a better human development in a country. These factors are, however, not as significant as the ones in PC1.
+
+
+*Give your personal interpretations of the first two principal component dimensions based on the biplot drawn after PCA on the standardized human data. (0-2 points)* 
+
+As per usual to these types of indeces and rankings, the Nordic countries seem to be grouped up with some other wealthy, developed Western countries in the left upper corner of the plot. This indicates that these are countries were women educate themselves in (approximately) in the same extention as men and are able to obtain leader positions in the society. Also life expectancy and expected level of education are high for this group of countries. 
+
+When looking at the group at the bottom of the figure, we see many developing countries in Africa and Asia, including countries from the Middle East. On the left, there are richer oil-polluting countries such as United Arab Emirates and Qatar. These countries might be rich in oil money, but they fare poorly in almost every other thinkable index when measuring the well-being of the country. Indeed, on the right on the bottom, there are very poor developing countries such as Sudan, Mali, Yemen, and Niger. Thus, the left-right axis would seem to indicate wealth.
+
+The countries in right upper corner would seem to be the ones grouped with higher maternal mortality and adoscelent birth rates - here we have countries such as Malawi, Cameroon, Sierra Leone, where we know gender equality is very poor and women give birth at very young age.
+
+
+*The tea data comes from the FactoMineR package and it is measured with a questionnaire on tea: 300 individuals were asked how they drink tea (18 questions) and what are their product's perception (12 questions). In addition, some personal details were asked (4 questions).*
+
+```{r}
+# Load the tea dataset and convert its character variables to factors
+tea <- read.csv("https://raw.githubusercontent.com/KimmoVehkalahti/Helsinki-Open-Data-Science/master/datasets/tea.csv", stringsAsFactors = TRUE)
+```
+
+*Explore the data briefly: look at the structure and the dimensions of the data. Use View(tea) to browse its contents, and visualize the data.*
+
+```{r}
+# Dimensions and structure of the data
+dim(tea)
+str(tea)
+# The data takes 300 observatios with 36 variables
+# This is a big data set - let's follow the Excersice set 5 and reduce the amount of variables analysed
+library(dplyr)
+library(tidyr)
+# column names to keep in the dataset
+keep_columns <- c("Tea", "How", "how", "sugar", "where", "lunch")
+
+# select the 'keep_columns' to create a new dataset
+tea_time <- select(tea, keep_columns)
+
+# look at the summaries and structure of the new tea_time data
+dim(tea_time)
+str(tea_time)
+# Scaled down to 6 variables that all take factor values
+
+# visualize the dataset
+library(ggplot2)
+pivot_longer(tea_time, cols = everything()) %>% 
+  ggplot(aes(value)) + facet_wrap("name", scales = "free")+
+  geom_bar()+
+  theme(axis.text.x = element_text(angle = 45, hjust = 1, size = 8))
+
+#view(tea_time) (remove the # to see the data)
+
+```
+
+*Use Multiple Correspondence Analysis (MCA) on the tea data (or on just certain columns of the data, it is up to you!). Interpret the results of the MCA and draw at least the variable biplot of the analysis. You can also explore other plotting options for MCA. Comment on the output of the plots. (0-4 points)*
+
+```{r}
+
+# Let's conduct the multiple correspondence analysis
+#install.packages(FactoMineR)
+library(FactoMineR)
+# so many warning messages all the time... Should probably update my R version
+mca <- MCA(tea_time, graph = FALSE)
+summary(mca)
+# One last go - the visualisations
+# visualize MCA
+plot(mca, invisible=c("ind"), graph.type = "classic", habillage= "quali")
+
 ```
 
 
+This MCA factor map tells me that the biggest dimensions that explain variation in the data are Dim1 with 15,24 % and Dim 2 with 14,23 %. It would seem that real tea drinking pro's are in the bottom right corner as they buy their tea unpacked and from tea shops. Then the more basic Lipton drinkers that occasionally also enjoy spicing things up are in the upper center; they don't mind getting their tea from a chain store but sometimes you just gotta treat yourself with the good stuff. No news to me that green tea mostly is being drank without milk or lemon (or other), whereas Earl Grey would seem to be quite drinkable with milk. Earl Grey is also closely located with the chain store variable - no news there, keeping it simple.
+
+That's all for this week!
