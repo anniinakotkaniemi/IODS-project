@@ -8,6 +8,8 @@ date()
 *Move the country names to rownames (see Exercise 5.5). Show a graphical overview of the data and show summaries of the variables in the data. Describe and interpret the outputs, commenting on the distributions of the variables and the relationships between them. (0-3 points)*
 
 ```{r}
+# Read the data
+human <- read.csv("~/IODS-project/data/human.csv")
 # First, let's get an overview of the data
 names(human)
 summary(human)
@@ -22,7 +24,7 @@ hist(human$Parli.F)
 # Moving the country names to rownames
 library(tibble)
 human_ <- column_to_rownames(human, "Country")
-human_
+#human_ # Remove the # to view
 # Visualize all the human_ variables
 library(GGally)
 ggpairs(human_ , progress=F)
@@ -47,7 +49,8 @@ One pair of variables also show a strong negative correlation: `Mat.Mor` and `Li
 pca_human <- prcomp(human_)
 
 # draw a biplot of the principal component representation and the original variables
-biplot(pca_human, choices = 1:2)
+biplot(pca_human, cex = c(0.8, 1), col = c("grey40", "deeppink2"))
+
 
 # summary of the pca
 summary(pca_human)
@@ -64,9 +67,6 @@ Hmm, based on this analysis, the Gross National Income is the only variable expl
 human_std <- scale(human_)
 # perform principal component analysis (with the SVD method)
 pca_human <- prcomp(human_std)
-
-# draw a biplot of the principal component representation and the original variables
-biplot(pca_human, choices = 1:2)
 
 # a summary of pca_human
 s <- summary(pca_human)
