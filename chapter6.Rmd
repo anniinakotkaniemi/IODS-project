@@ -1,0 +1,248 @@
+# Chapter 6 Analysis of longitudinal data
+
+Implementing the analyses of Chapter 8 using the RATS data, and the analyses of Chapter 9 using the BPRS data. Let's see how this goes!
+
+First some prepping of the data:
+
+```{r}
+# Last analysis exercise ahead, let's go!
+# Read the data
+# First the longitudial
+bprsl <- read.csv("~/IODS-project/data/bprs_long.csv")
+ratsl <- read.csv("~/IODS-project/data/rats_long.csv")
+# Then the old data
+BPRS <- read.csv("~/IODS-project/data/BPRS.csv")
+RATS <- read.csv("~/IODS-project/data/RATS.csv")
+
+# Removing the first columns that R added automatically
+bprsl <- bprsl[, -1]
+ratsl <- ratsl[, -1]
+# Make categorical variables to factors
+bprsl$treatment <- factor(bprsl$treatment)
+bprsl$subject <- factor(bprsl$subject)
+ratsl$Group <- factor(ratsl$Group)
+ratsl$ID <- factor(ratsl$ID)
+BPRS$treatment <- factor(BPRS$treatment)
+BPRS$subject <- factor(BPRS$subject)
+RATS$Group <- factor(RATS$Group)
+RATS$ID <- factor(RATS$ID)
+
+# Let's summarise the data
+glimpse(bprsl)
+glimpse(ratsl)
+summary(bprsl)
+summary(ratsl)
+
+```
+
+In the Part one, we work with the ratsl (and RATS) data. The data is from a nutrition study conducted in three groups of rats. The groups were put on different diets, and each animal’s body weight (grams) was recorded repeatedly (approximately) weekly, except in week seven when two recordings were taken) over a 9-week period. The question of most interest is whether the growth profiles of the three groups differ.
+
+This far all good... Then the actual analyses exercises. First, Chapter 8 exercises:
+
+```{r}
+# Drawing a plot with Time on x-axis and rats on the y-axis
+# Access the package ggplot2
+library(ggplot2)
+
+# Draw the plot
+ggplot(ratsl, aes(x = Time, y = rats, linetype = ID)) +
+  geom_line() +
+  scale_linetype_manual(values = rep(1:10, times=4)) +
+  facet_grid(. ~ Group, labeller = label_both) +
+  theme(legend.position = "none") + 
+  scale_y_continuous(limits = c(min(ratsl$rats), max(ratsl$rats)))
+
+```
+
+
+In the plot it can be seen that the three groups of rats differ quite significantly in their weight. Rats in the group 1 weight absolutely least, whereas the difference is not as big between groups 2 and 3. Group 2 has a significant outlier; in group 3 there is also one observation that can be distinguished from the rest but not as notable.
+
+Let's then standardise the weight of the rats, `rats` variable by grouping variable `Time`
+
+
+```{r}
+library(dplyr)
+library(tidyr)
+
+
+
+```
+
+
+```{r}
+# Standardise the variable rats
+ratsl <- ratsl %>%
+  group_by(Time) %>%
+  mutate(stdrats = (rats - mean(rats))/sd(rats) ) %>%
+  ungroup()
+
+# Glimpse the data
+glimpse(ratsl)
+
+# Plotting again with the standardized rats
+library(ggplot2)
+ggplot(ratsl, aes(x = Time, y = stdrats, linetype = ID)) +
+  geom_line() +
+  scale_linetype_manual(values = rep(1:10, times=4)) +
+  facet_grid(. ~ Group, labeller = label_both) +
+  theme(legend.position = "none") +
+  scale_y_continuous(name = "standardized rats")
+
+
+```
+
+
+The weights do not increase with time now; this is good news for the accuracy of the analysis.
+
+Next up: create the summary data `ratss` with the mean and standard error of the variable `rats``
+- Glimpse the data
+- Plot the mean profiles (with `geom_errorbar()` line commented out)
+- Uncomment the `geom_errorbar()` line and plot the mean profiles again
+- Note the considerable overlap in the mean profiles of the two treatment groups suggesting there might be little difference between the two groups in respect to the mean BPRS values
+
+Hint:
+- Calculate the summary variables `mean` and `se` inside the `summarise()` function
+
+```{r}
+
+# Create summary data 
+n <- ratsl$Time %>% unique() %>% length()
+ratss <- ratsl %>%
+  group_by(Time, Group) %>%
+  summarise( mean = mean(rats), se = sd(rats)/sqrt(n) ) %>%
+  ungroup()
+
+# Let's see
+glimpse(ratss)
+
+# Plot the mean profiles
+library(ggplot2)
+ggplot(ratss, aes(x = Time, y = mean, linetype = Group, shape = Group)) +
+  geom_line() +
+  scale_linetype_manual(values = c(1,2,3)) +
+  geom_point(size=3) +
+  scale_shape_manual(values = c(1,2,3)) +
+ geom_errorbar(aes(ymin=mean-se, ymax=mean+se, linetype="1"), width=0.3) +
+  theme(legend.position = c(0.9,0.6)) +
+  scale_y_continuous(name = "mean(rats) +/- se(rats)")
+
+
+```
+Now this plot represents the data more in the way of the original dataset, plotting the values by week. Here we can still see that the Group 1 is the lightest by marginal, while Group 2 is just a little lighter than Group 3. It can also be seen that Group 1 has rather little variation in comparison with the two other groups.
+
+In Groups 2 and 3 we had the significant outliers, let's take a look at them. This is a job for boxplots!
+
+*Instructions*
+- Create the summary data BPRSL8S
+- Glimpse the data
+- Draw the boxplot and observe the outlier
+- Find a suitable threshold value and use `filter()` to exclude the outlier to form a new data BPRSL8S1
+- Glimpse and draw a boxplot of the new data to check the outlier has been dealt with
+
+```{r}
+library(dplyr)
+library(tidyr)
+# Create a summary data by treatment and subject with mean as the summary variable (ignoring baseline Time 0)
+rats_sum <- ratsl %>%
+  filter(Time > 0) %>%
+  group_by(Group, ID) %>%
+  summarise( mean=mean(rats) ) %>%
+  ungroup()
+
+# Glimpse the data
+glimpse(rats_sum)
+
+# Draw a boxplot of the mean versus treatment
+library(ggplot2)
+ggplot(rats_sum, aes(x = Group, y = mean)) +
+  geom_boxplot() +
+  stat_summary(fun = "mean", geom = "point", shape=23, size=4, fill = "white") +
+  scale_y_continuous(name = "mean(bprs), weeks 1-8")
+
+# Create a new data by filtering the outlier and adjust the ggplot code the draw the plot again with the new data
+rats_sum_new <- rats_sum %>% filter(mean < 550)
+
+ggplot(rats_sum_new, aes(x = Group, y = mean)) +
+  geom_boxplot() +
+  stat_summary(fun = "mean", geom = "point", shape=23, size=4, fill = "white") +
+  scale_y_continuous(name = "mean(bprs), weeks 1-8")
+
+
+```
+
+Nice, we got rid of the outlier in Group 2. Groups 1 and 3 seem to also have a slight outlier each, but as they are not as extreme, we'll let them be. The boxplots show also that there is rather little variance within each group.
+
+Almost done with the first part!
+
+Next, part two with the BPRS data!
+
+The data contains 40 data subjects that received different treatment during eight weeks time. The respondents were rated on the Brief Psychiatric Rating Scale (BPRS) used to evaluate schizophrenia. 
+
+```{r}
+# Let's remind ourselves on how the data looks like
+colnames(bprsl)
+str(bprsl)
+dim(bprsl)
+
+# Moving on to plotting the data
+library(dplyr)
+library(tidyr)
+library(ggplot2)
+ggplot(bprsl, aes(x = week, y = bprs, group = subject, color = treatment)) +
+  geom_line() +
+  scale_x_continuous(name = "Time in Weeks", breaks = seq(0, 60, 10))+
+  scale_y_continuous(name = "Brief Psychiatric Rating Scale") +
+  theme_bw() + 
+  theme(legend.position = "top")
+
+
+
+```
+Well this plot looks interesting, looks like there are vast differences between the two groups. Let's move on to the linear regression modeling.
+
+
+```{r}
+# Fitting the model
+m1 <- lm(bprs ~ week + treatment, data = bprsl)
+summary(m1)
+
+```
+Looks like the "week" parameter gives a statistically significant effect; the treatment seems to have an effect on the BPRS scores over time. But, this model is likely to give inaccurate results as the different treatment weeks are unlikely to be unrelated. Better account for the interdependence of the observations with the Random Intercept Model!
+
+```{r}
+# access library lme4
+library(lme4)
+
+# Create a random intercept model
+m2 <- lmer(bprs ~ week + treatment + (1 | subject), data = bprsl, REML = FALSE)
+summary(m2)
+# Create a random intercept and slope model
+m3 <- lmer(bprs ~ week + treatment + (week | subject), data = bprsl, REML = FALSE)
+summary(m3)
+
+```
+
+The model 2 (m2) allows the each individual to differ in the intercept of the model. The model 3 (m3) allows the model to differ both in intercept and slope per individual. The models seem to indicate that there is a statistically significant effect in the BPRS scores of the treatment, as there is decrease in the scores during the treatment periods. Both treatments seem to give an effect. 
+
+Lastly, I fit a random intercept and slope model that allows for a treatment × time interaction.
+
+```{r}
+# A random intercept and slope model with treatment x time interaction
+m4 <- lmer(bprs ~ week + treatment + (week | subject) + (treatment * week), data = bprsl, REML = FALSE)
+summary(m4)
+
+# Testing whether the model performs better than the model without the interaction term
+# perform an ANOVA test on the two models
+anova(m3, m4)
+```
+
+Does not look like that the interaction effect would add to the explanatory power of the model; the AIC and BIC values are slightly higher for m4 (lower values indicating a better fit), and the deviance test is not significant on alpha 0.05 value.
+
+That's it folks, let's wrap this course up! :)
+
+
+
+
+
+
+
